@@ -32,7 +32,25 @@ productController.post(
         return;
       }
 
-      const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+      // presigned URL 방식 여부 체크
+      let isPresigned = false;
+      let presignedUrl: string | null = null;
+      let images: string | null = null;
+      // 1. presigned URL 방식: images 필드(string 또는 string[])
+      if (req.body.images) {
+        isPresigned = true;
+        if (Array.isArray(req.body.images)) {
+          presignedUrl = req.body.images[0];
+        } else {
+          presignedUrl = req.body.images;
+        }
+      }
+      else if (req.file && (req.file as any).location) {
+        images = (req.file as any).location;
+      }
+      else if (req.file) {
+        images = `/uploads/${req.file.filename}`;
+      }
 
       const productData = {
         name: req.body.name,
@@ -43,14 +61,17 @@ productController.post(
             ? req.body.tags
             : [req.body.tags]
           : [],
-        images: imagePath,
+        images: isPresigned ? null : images,
         authorId,
       };
 
-      console.log("Product data before creation:", productData); // productData 로그 추가
+      console.log("Product data before creation:", productData);
 
       const createdProduct = await productService.create(productData);
-      res.status(201).json(createdProduct);
+      res.status(201).json({
+        ...createdProduct,
+        presignedUrl: presignedUrl || null,
+      });
     } catch (err) {
       next(err);
     }

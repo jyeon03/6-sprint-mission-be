@@ -1,16 +1,40 @@
-### 자유게시글 생성
-POST http://localhost:5050/article
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiZW1haWwiOiJiamx5ZW9uMkBuYXZlci5jb20iLCJuYW1lIjoi7YWM7Iqk7Yq47Jyg7KCAOSIsImlhdCI6MTc1MDYxMDg2MywiZXhwIjoxNzUwNjE0NDYzfQ.cDvZ4hmyDLWGEj-7BULD5oBswX7DQZX_WdeRjSJQ7RY
+### [1] presigned URL 발급 (프론트에서 S3 직접 업로드용)
+POST http://localhost:3000/presigned-url
+Content-Type: application/json
+
+{
+  "fileName": "test.jpg",
+  "fileType": "image/jpeg"
+}
+
+### [2] presigned URL로 S3에 직접 업로드 (PUT, curl 등으로)
+# curl -X PUT "{url}" -H "Content-Type: image/jpeg" --data-binary @./test.jpg
+
+### [3] presigned URL 방식 게시글 생성 (S3 URL만 전달)
+POST http://localhost:3000/article
+Authorization: Bearer ..kPeMr979CtyLtqtFvvUE9BslDGbRtdLI61d5Iy7UWXg.eyJpZCI6MiwiZW1haWwiOiJiamx5ZW9uMkBuYXZlci5jb20iLCJuYW1lIjoi7YWM7Iqk7Yq47Jyg7KCAOSIsImlhdCI6MTc1MTI2ODg5NywiZXhwIjoxNzUxMjcyNDk3fQ.PYinWZWcrFB3LuPqjycHtiJQx--g06IGWoETbeDkL1Y
+Content-Type: application/json
+
+{
+  "title": "presigned 게시글 제목",
+  "content": "presigned 게시글 내용입니다.",
+  "image": "https://버킷명.s3.ap-northeast-2.amazonaws.com/article/123456_test.jpg"
+}
+
+### [4] multer-s3 방식 게시글 생성 (서버가 S3에 직접 업로드)
+# 실제로는 서버에서 multer-s3 미들웨어가 동작해야 함
+POST http://localhost:3000/article?access=private
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiZW1haWwiOiJiamx5ZW9uMkBuYXZlci5jb20iLCJuYW1lIjoi7YWM7Iqk7Yq47Jyg7KCAOSIsImlhdCI6MTc1MTI3MjgwMywiZXhwIjoxNzUxMjc2NDAzfQ.kPeMr979CtyLtqtFvvUE9BslDGbRtdLI61d5Iy7UWXg
 Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
 
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
 Content-Disposition: form-data; name="title"
 
-자유 게시글 제목
+multer-s3 게시글 제목
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
 Content-Disposition: form-data; name="content"
 
-자유 게시글 내용입니다.
+multer-s3 게시글 내용입니다.
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
 Content-Disposition: form-data; name="image"; filename="test.jpg"
 Content-Type: image/jpeg
@@ -18,16 +42,35 @@ Content-Type: image/jpeg
 < ./test.jpg
 ------WebKitFormBoundary7MA4YWxkTrZu0gW--
 
+### [5] 로컬 multer 방식 게시글 생성 (서버에 파일 저장)
+POST http://localhost:3000/article
+Authorization: Bearer ..kPeMr979CtyLtqtFvvUE9BslDGbRtdLI61d5Iy7UWXg.eyJpZCI6MiwiZW1haWwiOiJiamx5ZW9uMkBuYXZlci5jb20iLCJuYW1lIjoi7YWM7Iqk7Yq47Jyg7KCAOSIsImlhdCI6MTc1MTI2ODg5NywiZXhwIjoxNzUxMjcyNDk3fQ.PYinWZWcrFB3LuPqjycHtiJQx--g06IGWoETbeDkL1Y
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="title"
+
+로컬 업로드 게시글 제목
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="content"
+
+로컬 업로드 게시글 내용입니다.
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="image"; filename="test.jpg"
+Content-Type: image/jpeg
+
+< ./test.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
 
 ### 전체 자유게시글 조회
-GET http://localhost:5050/article
+GET http://localhost:3000/article
 
 ### 자유게시글 단건 조회
-GET http://localhost:5050/article/1
+GET http://localhost:3000/article/1
 
 ### 자유게시글 수정
-PUT http://localhost:5050/article/2
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiZW1haWwiOiJiamx5ZW9uMkBuYXZlci5jb20iLCJuYW1lIjoi7YWM7Iqk7Yq47Jyg7KCAOSIsImlhdCI6MTc1MDYxMDg2MywiZXhwIjoxNzUwNjE0NDYzfQ.cDvZ4hmyDLWGEj-7BULD5oBswX7DQZX_WdeRjSJQ7RY
+PUT http://localhost:3000/article/20
+Authorization: Bearer ..kPeMr979CtyLtqtFvvUE9BslDGbRtdLI61d5Iy7UWXg.eyJpZCI6MiwiZW1haWwiOiJiamx5ZW9uMkBuYXZlci5jb20iLCJuYW1lIjoi7YWM7Iqk7Yq47Jyg7KCAOSIsImlhdCI6MTc1MTI2NDcwNywiZXhwIjoxNzUxMjY4MzA3fQ.GM_KbWjjlcsgZz5DxiqzwhvfMWuCerxfTCTUMNkH_9I
 Content-Type: application/json
 
 {
@@ -36,17 +79,17 @@ Content-Type: application/json
 }
 
 ### 자유게시글 삭제
-DELETE http://localhost:5050/article/5
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc0OTcxODAzMCwiZXhwIjoxNzQ5NzIxNjMwfQ.J8xoIMhtbGQv3gD1tUGJrkIxVv_1Dn3iGAk_n_3ov_c
+DELETE http://localhost:3000/article/5
+Authorization: Bearer ..kPeMr979CtyLtqtFvvUE9BslDGbRtdLI61d5Iy7UWXg.eyJ1c2VySWQiOjEsImlhdCI6MTc0OTcxODAzMCwiZXhwIjoxNzQ5NzIxNjMwfQ.J8xoIMhtbGQv3gD1tUGJrkIxVv_1Dn3iGAk_n_3ov_c
 
 ### 자유게시글 좋아요 추가
-POST http://localhost:5050/article/1/like
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc0OTcxODAzMCwiZXhwIjoxNzQ5NzIxNjMwfQ.J8xoIMhtbGQv3gD1tUGJrkIxVv_1Dn3iGAk_n_3ov_c
+POST http://localhost:3000/article/1/like
+Authorization: Bearer ..kPeMr979CtyLtqtFvvUE9BslDGbRtdLI61d5Iy7UWXg.eyJ1c2VySWQiOjEsImlhdCI6MTc0OTcxODAzMCwiZXhwIjoxNzQ5NzIxNjMwfQ.J8xoIMhtbGQv3gD1tUGJrkIxVv_1Dn3iGAk_n_3ov_c
 
 ### 자유게시글 좋아요 취소
-DELETE http://localhost:5050/article/1/like
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc0OTcxODAzMCwiZXhwIjoxNzQ5NzIxNjMwfQ.J8xoIMhtbGQv3gD1tUGJrkIxVv_1Dn3iGAk_n_3ov_c
+DELETE http://localhost:3000/article/1/like
+Authorization: Bearer ..kPeMr979CtyLtqtFvvUE9BslDGbRtdLI61d5Iy7UWXg.eyJ1c2VySWQiOjEsImlhdCI6MTc0OTcxODAzMCwiZXhwIjoxNzQ5NzIxNjMwfQ.J8xoIMhtbGQv3gD1tUGJrkIxVv_1Dn3iGAk_n_3ov_c
 
 ### 자유게시글 좋아요 여부 확인
-GET http://localhost:5050/article/5/like
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc0OTcxODAzMCwiZXhwIjoxNzQ5NzIxNjMwfQ.J8xoIMhtbGQv3gD1tUGJrkIxVv_1Dn3iGAk_n_3ov_c
+GET http://localhost:3000/article/5/like
+Authorization: Bearer ..kPeMr979CtyLtqtFvvUE9BslDGbRtdLI61d5Iy7UWXg.eyJ1c2VySWQiOjEsImlhdCI6MTc0OTcxODAzMCwiZXhwIjoxNzQ5NzIxNjMwfQ.J8xoIMhtbGQv3gD1tUGJrkIxVv_1Dn3iGAk_n_3ov_c

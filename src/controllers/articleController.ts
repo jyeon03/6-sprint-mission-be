@@ -22,7 +22,21 @@ articleController.post(
         return;
       }
 
-      const { title, content, image } = req.body;
+      const { title, content, image: imageFromBody, presignedUrl } = req.body;
+      let image: string | null = null;
+      // 1. multer-s3 방식: S3 location
+      if (req.file && (req.file as any).location) {
+        image = (req.file as any).location;
+      }
+      // 2. presigned URL 방식: image 필드
+      else if (imageFromBody) {
+        image = imageFromBody;
+      }
+      // 3. fallback: multer 로컬 업로드
+      else if (req.file) {
+        image = `/uploads/${req.file.filename}`;
+      }
+
       if (!title || !content) {
         const error = new ValidationError("제목과 내용은 필수입니다.");
         throw error;
@@ -35,7 +49,7 @@ articleController.post(
         authorId,
       });
 
-      res.status(201).json(article);
+      res.status(201).json({ ...article, presignedUrl: presignedUrl || null });
     } catch (error) {
       next(error);
     }
@@ -203,5 +217,28 @@ articleController.get(
     }
   }
 );
+
+export const createWithImage = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { title, content } = req.body;
+    const authorId = (req as any).auth?.id;
+    const image = req.file ? `/uploads/${req.file.filename}` : null;
+
+    const article = await articleService.create({
+      title,
+      content,
+      image,
+      authorId,
+    });
+
+    res.status(201).json(article);
+  } catch (error) {
+    next(error);
+  }
+};
 
 export default articleController;

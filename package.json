@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "ts-node-dev --respawn src/app.ts",
     "build": "tsc",
-    "start": "node --enable-source-maps dist/app.js"
+    "start": "node --enable-source-maps dist/app.js",
+    "ssh": "dotenv -- bash -c 'ssh -i \"$SSH_KEY_PATH\" -L 5432:$DB_HOST:5432 $EC2_USER@$EC2_HOST'"
   },
   "repository": {
     "type": "git",
@@ -20,6 +21,8 @@
   },
   "homepage": "https://github.com/jyeon03/6-sprint-mission-be#readme",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.839.0",
+    "@aws-sdk/s3-request-presigner": "^3.839.0",
     "@faker-js/faker": "^9.7.0",
     "@prisma/client": "^6.5.0",
     "bcrypt": "^5.1.1",
@@ -32,11 +35,15 @@
     "multer": "^1.4.5-lts.2"
   },
   "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
     "@types/cookie-parser": "^1.4.9",
     "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.1",
+    "@types/express": "^4.17.21",
     "@types/multer": "^1.4.13",
+    "@types/multer-s3": "^3.0.3",
     "@types/node": "^22.13.10",
+    "dotenv-cli": "^8.0.0",
+    "multer-s3": "^3.0.1",
     "nodemon": "^3.1.9",
     "prisma": "^6.5.0",
     "ts-node-dev": "^2.0.0",
@@ -45,6 +52,6 @@
   },
   "prisma": {
     "schema": "./src/db/prisma/schema.prisma",
-    "seed": "node prisma/seed.js"
+    "seed": "ts-node prisma/seed.ts"
   }
 }
